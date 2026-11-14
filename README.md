@@ -1,112 +1,56 @@
-# Kokuban 内核 for 三星 Galaxy Z5 系列
+# Z5 Droidspaces Kernel
 
-<p align="center">
-<img src="https://raw.githubusercontent.com/YuzakiKokuban/Kokuban_Kernel_CI_Center/main/docs/kokuban_logo.png" alt="Logo" width="150">
-</p>
+面向 **Galaxy Z Fold5（q5q）/ Z Flip5（b5q）** 的独立维护内核，基于 Kokuban SM8550 源码和 DroidSpaces 官方 GKI 适配。
 
-<p align="center">
-<a href="https://github.com/YuzakiKokuban/android_kernel_samsung_sm8550_Z5/releases"><img src="https://img.shields.io/github/v/release/YuzakiKokuban/android_kernel_samsung_sm8550_Z5?style=for-the-badge&logo=github&color=blue" alt="GitHub release"></a>
-<a href="https://t.me/kokubanchat"><img src="https://img.shields.io/badge/Telegram-交流群-blue.svg?style=for-the-badge&logo=telegram" alt="Telegram"></a>
-</p>
+- 内核：Linux 5.15.178 / Android 13 GKI
+- 分支：`main`（LKM）、`bakasu`（BakaSU + SUSFS）
+- 构建：[Z5 Kernel CI](https://github.com/Alhkxsj/Kokuban_Kernel_CI_Center)
+- 下载：[Releases](https://github.com/Alhkxsj/android_kernel_samsung_sm8550_Z5/releases)
 
-这是一个面向 **三星 Galaxy Z5 系列** 的自定义内核项目，重点围绕稳定性、性能调优与日常可用性进行构建。项目当前维护 `LKM` 与 `BakaSU` 两种发行模式，以满足不同用户对纯净环境和高级功能的需求。
+## DroidSpaces 支持
 
-## 项目概览
+已开启 IPC/PID/User Namespace、devtmpfs、NAT/IPv6、MACVLAN、UFW/Fail2ban、完整 ipset、NTSync、UNIX_DIAG、PROC_CHILDREN 和虚拟 HCI。
 
-* **性能优化**：提供面向日常使用与游戏场景的调度与性能调优。
-* **精简发行模式**：围绕 `LKM` 与 `BakaSU` 两种模式持续维护，减少历史分支带来的维护复杂度。
-* **扩展特性支持**：可按 workflow 构建配置集成 `Hybrid Mount` 与 `BBG`；自动构建默认集成适用于所有内核的 `Hybrid Mount`。
-* **版本标识**：`-android13-Kokuban-Mei-FZB2`
+以下选项因实测破坏 kABI 而保持关闭：
 
-## 发行版本说明
+- `CFS_BANDWIDTH`、`CGROUP_PIDS`：DS 的 CPU/进程数限制不可用
+- `CGROUP_DEVICE`
+- `NF_TABLES`
+- `BRIDGE_NETFILTER`
 
-* **LKM (Loadable Kernel Module)**
-  * 不内置 Root 方案，适合希望保持内核环境尽可能精简的使用方式。
-  * 如需 Root，需要通过 KernelSU Manager App 手动修补并刷入设备的 `init_boot` 镜像。
+保留 `MODVERSIONS=y` 和官方 SYSVIPC kABI 修复。每次正式构建均检查最终配置，并要求 **0 CRC mismatch、0 missing**。
 
-* **BakaSU**
-  * 集成 BakaSU，使用完整的手动 hooks 并在构建前校验。
-  * 适合有模块扩展、隐藏能力或进阶调试需求的用户。
+## 刷入
 
-> 当前项目不再维护旧的内置 `KSU/MKSU` 分支模式。
+1. 备份 `boot`、`init_boot` 和个人数据。
+2. 在 Recovery 中刷入对应 ZIP，ZIP 仅允许 `q5q`、`b5q`。
+3. 重启后运行 DroidSpaces 的 **Settings → Requirements → Check Requirements**。
+4. LKM 版若需 Root，另用 KernelSU Manager 修补并刷入 `init_boot`；BakaSU 版已内置 Root。
 
-## 安装指南
+刷机包只替换 boot，不主动刷写 `vendor_boot`、`vendor_dlkm` 或 `system_dlkm`。
 
-1. **解锁 Bootloader**：请确保设备已完成 Bootloader 解锁。
-2. **准备 Recovery**：建议使用较新的 `TWRP` 或 `OrangeFox Recovery`。
-3. **刷入内核**：从本项目 [Releases 页面](https://github.com/YuzakiKokuban/android_kernel_samsung_sm8550_Z5/releases) 下载对应版本，并在 Recovery 中刷入内核 `zip` 包。
-4. **仅 LKM 版本需要：修补 `init_boot`**
-   使用前请先备份当前设备的 `init_boot.img`，再通过 KernelSU Manager App 选择并修补该镜像，随后使用 Fastboot 或 Recovery 将修补后的镜像刷入 `init_boot` 分区。
-5. **重启设备**：完成刷入后重启系统并确认功能状态。
+## 构建
 
-## 下载
+在 CI 仓库运行 **Build Kernel**：
 
-所有最新构建版本均发布于 [**Releases 页面**](https://github.com/YuzakiKokuban/android_kernel_samsung_sm8550_Z5/releases)。
+- Project：`z5_sm8550`
+- Branch：`main` 或 `bakasu`
+- 测试时关闭 Create Release，正式发布时开启
 
-## 反馈与支持
+推送这两个分支也会自动构建。产物包含刷机 ZIP、`.config` 和 `vmlinux.symvers`。
 
-如需获取使用交流、问题反馈或发布通知，可加入 [Telegram 交流群](https://t.me/kokubanchat)。
+## 上游同步
 
-## 免责声明
+上游：[YuzakiKokuban/android_kernel_samsung_sm8550_Z5](https://github.com/YuzakiKokuban/android_kernel_samsung_sm8550_Z5)
 
-刷机有风险，操作需谨慎。在进行任何操作前，请务必完整备份您的个人数据。因刷入此内核而导致的任何设备损坏或数据丢失，本人概不负责。
+[上游监视 Issue](https://github.com/Alhkxsj/Kokuban_Kernel_CI_Center/issues/1) 每 6 小时检查一次，仅在新提交出现时追加提醒，不依赖 fork 网络，也不自动合并。
 
+```bash
+git fetch upstream main bakasu
+git log main..upstream/main
+# 审核后 cherry-pick 需要的提交并重新构建验证
+```
 
+## 注意
 
-# Kokuban Kernel for Samsung Galaxy Z5 Series
-
-<p align="center">
-<img src="https://raw.githubusercontent.com/YuzakiKokuban/Kokuban_Kernel_CI_Center/main/docs/kokuban_logo.png" alt="Logo" width="150">
-</p>
-
-<p align="center">
-<a href="https://github.com/YuzakiKokuban/android_kernel_samsung_sm8550_Z5/releases"><img src="https://img.shields.io/github/v/release/YuzakiKokuban/android_kernel_samsung_sm8550_Z5?style=for-the-badge&logo=github&color=blue" alt="GitHub release"></a>
-<a href="https://t.me/kokubanchat"><img src="https://img.shields.io/badge/Telegram-Chat-blue.svg?style=for-the-badge&logo=telegram" alt="Telegram"></a>
-</p>
-
-This is a custom kernel project for the **Samsung Galaxy Z5 Series**, built with a focus on stability, performance tuning, and day-to-day usability. The project currently maintains two release tracks, `LKM` and `BakaSU`, to serve both clean setups and advanced power-user workflows.
-
-## Overview
-
-* **Performance Tuned**: Includes targeted scheduling and performance optimizations for smoother daily use and gaming.
-* **Streamlined Release Model**: Focuses on the actively maintained `LKM` and `BakaSU` variants to keep maintenance predictable and transparent.
-* **Optional Feature Integration**: Automated builds integrate `Hybrid Mount` by default and expose a workflow option to disable it. Matching builds may also include `BBG`.
-* **Version Identifier**: `-android13-Kokuban-Mei-FZB2`
-
-## Release Variants
-
-* **LKM (Loadable Kernel Module)**
-  * Does not include a built-in root solution and is intended for users who prefer a cleaner kernel environment.
-  * If root access is required, patch and flash the device `init_boot` image manually through the KernelSU Manager App.
-
-* **BakaSU**
-  * Integrates BakaSU with complete manual hooks verified before compilation.
-  * Recommended for users who need module extensibility, root hiding, or other advanced workflows.
-
-> This project no longer maintains the legacy built-in `KSU/MKSU` branch model.
-
-## Installation
-
-1. **Unlock the Bootloader**: Make sure the device bootloader is already unlocked.
-2. **Prepare a Recovery Environment**: A recent version of `TWRP` or `OrangeFox Recovery` is recommended.
-3. **Flash the Kernel**: Download the appropriate package from the [Releases page](https://github.com/YuzakiKokuban/android_kernel_samsung_sm8550_Z5/releases) and flash the kernel `zip` through Recovery.
-4. **LKM Builds Only: Patch `init_boot`**
-   Back up your current `init_boot.img`, patch it with the KernelSU Manager App, and flash the patched image back to the `init_boot` partition using Fastboot or Recovery.
-5. **Reboot the Device**: Restart the system and verify the kernel is running as expected.
-
-## Downloads
-
-All current builds are published on the [**Releases Page**](https://github.com/YuzakiKokuban/android_kernel_samsung_sm8550_Z5/releases).
-
-## Support
-
-For release notifications, discussion, or general support, join the [Telegram group](https://t.me/kokubanchat).
-
-## Disclaimer
-
-Flashing custom software carries inherent risks. Please make a full backup of your personal data before proceeding. I am not responsible for any damage to your device or data loss that may occur as a result of flashing this kernel.
-
-
-<p align="center">
-<a href="https://www.paypal.me/LangQin280">☕ Support Me</a>
-</p>
+构建和 kABI 检查不能代替实机验证。首次刷入前请确认固件匹配并保留恢复手段，启动后再检查厂商模块、显示、基带、休眠唤醒及 DroidSpaces 功能。
