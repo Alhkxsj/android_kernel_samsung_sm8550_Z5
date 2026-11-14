@@ -45,7 +45,10 @@
 
 [上游监视 Issue](https://github.com/Alhkxsj/Kokuban_Kernel_CI_Center/issues/1) 每 6 小时检查一次，仅在新提交出现时追加提醒，不依赖 fork 网络，也不自动合并。
 
+首次先添加上游 remote（已有可跳过）：
+
 ```bash
+git remote add upstream https://github.com/YuzakiKokuban/android_kernel_samsung_sm8550_Z5.git
 git fetch upstream main bakasu
 git log main..upstream/main
 # 审核后 cherry-pick 需要的提交并重新构建验证
